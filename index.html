@@ -54,6 +54,9 @@
                 <button id="btn-spawn-treasure" class="control-btn" title="產生隨機寶物">
                     <i class="fa-solid fa-gem text-gold"></i> 召喚寶物
                 </button>
+                <button id="btn-help" class="control-btn" title="查看玩法教學">
+                    <i class="fa-solid fa-circle-question text-blue"></i> 玩法教學
+                </button>
                 <button id="btn-day-night" class="control-btn" title="切換日夜模式">
                     <i class="fa-solid fa-moon"></i>
                 </button>
@@ -155,6 +158,32 @@
             </div>
         </div>
     </div>
+
+    <!-- 玩法教學小視窗 (Help Guide Panel) -->
+    <div id="help-panel" class="help-panel glass-panel">
+        <div class="help-header">
+            <span class="help-title"><i class="fa-solid fa-circle-question"></i> 皮克敏花園玩法指南</span>
+            <div class="help-actions">
+                <button id="btn-minimize-help" title="折疊/展開教學"><i class="fa-solid fa-minus"></i></button>
+                <button id="btn-close-help" title="關閉教學"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div class="help-content">
+            <ul>
+                <li><span class="badge badge-green"><i class="fa-solid fa-leaf"></i> 拔起</span> 點擊地面的<b>小嫩芽</b>（或點擊「一鍵拔起」），啵！地拔出皮克敏社員。</li>
+                <li><span class="badge badge-gold"><i class="fa-solid fa-volume-high"></i> 吹哨</span> <b>拖曳吉祥物</b>到任意位置，<b>按一下吉祥物</b>可吹響哨子，召集範圍內的皮克敏排隊跟隨！</li>
+                <li><span class="badge badge-blue"><i class="fa-solid fa-bullseye"></i> 投擲</span> 吹哨跟隨後，<b>點擊一隻皮克敏</b>選中牠，再<b>點擊草地任意處</b>即可拋投出去！</li>
+                <li><span class="badge badge-purple"><i class="fa-solid fa-gem"></i> 搬運</span> <b>點擊草地</b>召喚寶物。跟隨的皮克敏會被派去搬運，合力抬到右上角<b>洋蔥基地</b>換取積分！</li>
+                <li><span class="badge badge-red"><i class="fa-solid fa-fire"></i> 避難</span> 避開<b>火之域</b>與<b>水之池</b>！非對應屬性的皮克敏走入會陷入恐慌，需立刻把吉祥物帶去<b>吹哨拯救</b>！</li>
+                <li><span class="badge badge-glow"><i class="fa-solid fa-id-card"></i> 卡片</span> <b>雙擊皮克敏</b>能開啟玻璃個人卡片，查看詳細的職稱介紹與能力性格屬性。</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 漂浮玩法教學按鈕 (當面板關閉或縮小時顯示) -->
+    <button id="help-float-btn" class="help-float-btn" title="打開玩法教學">
+        <i class="fa-solid fa-circle-question"></i>
+    </button>
 
     <!-- 背景音樂 -->
     <audio id="bg-music" src="music/background.mp3" loop></audio>

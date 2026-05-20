@@ -379,9 +379,11 @@ document.addEventListener("DOMContentLoaded", () => {
         let newX = e.clientX - dragStartX;
         let newY = e.clientY - dragStartY;
         
-        // 限制在舞台邊界內 (考慮大兩倍的吉祥物寬高 140px)
-        newX = Math.max(10, Math.min(window.innerWidth - 150, newX));
-        newY = Math.max(80, Math.min(window.innerHeight - 150, newY));
+        // 限制在舞台邊界內 (考慮響應式下吉祥物實際寬高)
+        const guyWidth = guy.offsetWidth || 140;
+        const guyHeight = guy.offsetHeight || 140;
+        newX = Math.max(10, Math.min(window.innerWidth - guyWidth - 10, newX));
+        newY = Math.max(80, Math.min(window.innerHeight - guyHeight - 10, newY));
         
         state.guyX = newX;
         state.guyY = newY;
@@ -419,11 +421,154 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 視窗大小改變時更新邊界
+    // 視窗大小改變時更新邊界，動態適應響應式寬高，避免元素掉出螢幕
     window.addEventListener("resize", () => {
-        state.guyY = Math.min(state.guyY, window.innerHeight - 80);
+        const guyEl = document.getElementById("liyu-chill-guy");
+        const guyWidth = guyEl ? guyEl.offsetWidth : 140;
+        const guyHeight = guyEl ? guyEl.offsetHeight : 140;
+        
+        state.guyX = Math.max(10, Math.min(window.innerWidth - guyWidth - 10, state.guyX));
+        state.guyY = Math.max(80, Math.min(window.innerHeight - guyHeight - 10, state.guyY));
         updateGuyPosition();
+        
+        // 同步修正皮克敏，避免縮小視窗時皮克敏卡在外面
+        pikmins.forEach(p => {
+            const pWidth = p.element.offsetWidth || 170;
+            const pHeight = p.element.offsetHeight || 170;
+            p.x = Math.max(10, Math.min(window.innerWidth - pWidth, p.x));
+            p.y = Math.max(90, Math.min(window.innerHeight - pHeight, p.y));
+            p.element.style.left = `${p.x}px`;
+            p.element.style.top = `${p.y}px`;
+        });
     });
+
+    // 4.7 玩法教學小視窗控制邏輯
+    const helpPanel = document.getElementById("help-panel");
+    const btnHelp = document.getElementById("btn-help");
+    const btnMinHelp = document.getElementById("btn-minimize-help");
+    const btnCloseHelp = document.getElementById("btn-close-help");
+    const helpFloatBtn = document.getElementById("help-float-btn");
+    const helpHeader = helpPanel ? helpPanel.querySelector(".help-header") : null;
+
+    if (helpPanel && btnHelp && btnMinHelp && btnCloseHelp && helpFloatBtn) {
+        // 預設延遲 800ms 以精美動畫浮現教學面板
+        setTimeout(() => {
+            helpPanel.classList.add("show");
+        }, 800);
+
+        // 切換教學面板的顯示/隱藏
+        btnHelp.addEventListener("click", () => {
+            sounds.init();
+            if (helpPanel.classList.contains("hide")) {
+                openHelpPanel();
+            } else {
+                closeHelpPanel();
+            }
+        });
+
+        // 最小化面板
+        btnMinHelp.addEventListener("click", (e) => {
+            e.stopPropagation();
+            sounds.init();
+            toggleMinimizeHelp();
+        });
+
+        // 點擊標題也可以最小化
+        if (helpHeader) {
+            helpHeader.addEventListener("click", (e) => {
+                // 如果點擊的是按鈕，不要觸發
+                if (e.target.closest("button")) return;
+                sounds.init();
+                toggleMinimizeHelp();
+            });
+        }
+
+        // 關閉面板，顯示漂浮按鈕
+        btnCloseHelp.addEventListener("click", (e) => {
+            e.stopPropagation();
+            sounds.init();
+            closeHelpPanel();
+        });
+
+        // 點擊漂浮按鈕重新打開面板
+        helpFloatBtn.addEventListener("click", () => {
+            sounds.init();
+            openHelpPanel();
+        });
+
+        function openHelpPanel() {
+            helpPanel.classList.remove("hide");
+            helpPanel.classList.add("show");
+            helpFloatBtn.classList.remove("show");
+            // 打開時預設不最小化
+            helpPanel.classList.remove("minimized");
+            btnMinHelp.innerHTML = '<i class="fa-solid fa-minus"></i>';
+        }
+
+        function closeHelpPanel() {
+            helpPanel.classList.add("hide");
+            helpPanel.classList.remove("show");
+            helpFloatBtn.classList.add("show");
+        }
+
+        function toggleMinimizeHelp() {
+            helpPanel.classList.toggle("minimized");
+            if (helpPanel.classList.contains("minimized")) {
+                btnMinHelp.innerHTML = '<i class="fa-solid fa-expand"></i>';
+            } else {
+                btnMinHelp.innerHTML = '<i class="fa-solid fa-minus"></i>';
+            }
+        }
+
+        // 4.7A 玩法教學小視窗「拖曳移動位置」邏輯
+        let isDraggingHelp = false;
+        let helpStartX = 0;
+        let helpStartY = 0;
+
+        if (helpHeader) {
+            helpHeader.style.cursor = "move";
+
+            helpHeader.addEventListener("pointerdown", (e) => {
+                // 只有在非點擊按鈕時，才觸發拖曳
+                if (e.target.closest("button")) return;
+
+                isDraggingHelp = true;
+                helpPanel.style.transition = "none"; // 拖曳時關閉 transition，避免遲滯
+
+                const rect = helpPanel.getBoundingClientRect();
+                helpStartX = e.clientX - rect.left;
+                helpStartY = e.clientY - rect.top;
+
+                helpHeader.setPointerCapture(e.pointerId);
+            });
+
+            helpHeader.addEventListener("pointermove", (e) => {
+                if (!isDraggingHelp) return;
+
+                let newLeft = e.clientX - helpStartX;
+                let newTop = e.clientY - helpStartY;
+
+                // 限制在螢幕可視區域內，防止拖出外側
+                newLeft = Math.max(0, Math.min(window.innerWidth - helpPanel.offsetWidth, newLeft));
+                newTop = Math.max(0, Math.min(window.innerHeight - helpPanel.offsetHeight, newTop));
+
+                // 將 right/bottom 定位模式轉換為 left/top 模式，並更新座標
+                helpPanel.style.right = "auto";
+                helpPanel.style.bottom = "auto";
+                helpPanel.style.left = `${newLeft}px`;
+                helpPanel.style.top = `${newTop}px`;
+            });
+
+            helpHeader.addEventListener("pointerup", (e) => {
+                if (!isDraggingHelp) return;
+                isDraggingHelp = false;
+                helpHeader.releasePointerCapture(e.pointerId);
+
+                // 恢復 transition 動畫
+                helpPanel.style.transition = "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), left 0s, top 0s";
+            });
+        }
+    }
 });
 
 // 更新吉祥物位置
@@ -447,9 +592,12 @@ function triggerWhistle() {
     const ring = document.querySelector(".whistle-glow");
     ring.classList.add("active");
     
-    // 取得哨子中心點 (吉祥物中心，寬高 140px 故中心點 +70)
-    const whistleCenterX = state.guyX + 70;
-    const whistleCenterY = state.guyY + 70;
+    // 取得哨子中心點 (吉祥物中心，動態計算以支援響應式大小)
+    const guyEl = document.getElementById("liyu-chill-guy");
+    const guyWidth = guyEl ? guyEl.offsetWidth : 140;
+    const guyHeight = guyEl ? guyEl.offsetHeight : 140;
+    const whistleCenterX = state.guyX + (guyWidth / 2);
+    const whistleCenterY = state.guyY + (guyHeight / 2);
 
     // 定期偵測是否有皮克敏在擴散的哨音範圍內
     const whistleRadius = 200; // 最大擴散半徑
@@ -1030,9 +1178,10 @@ function updateLoop() {
                 createWindParticles(p.x + 22, p.y + 22);
             }
             
-            // 判斷是否落地（接近目標點或超出舞台下邊界，考慮皮克敏高度 110px）
+            // 判斷是否落地（接近目標點或超出舞台下邊界，考慮皮克敏實際高度以支援響應式）
+            const pHeight = p.element.offsetHeight || 170;
             const distToTarget = Math.hypot(p.x - p.targetX, p.y - p.targetY);
-            if (distToTarget < 15 || p.y >= stageHeight - 110) {
+            if (distToTarget < 15 || p.y >= stageHeight - pHeight) {
                 p.status = 'idle';
                 p.vx = 0;
                 p.vy = 0;
@@ -1050,9 +1199,12 @@ function updateLoop() {
             let targetX, targetY;
             
             if (idx === 0 || pikmins[idx - 1].status !== 'follow') {
-                // 跟隨 LiyuChillGuy 的屁股（寬高 140px，目標設在後方中央）
-                targetX = state.guyX + 70;
-                targetY = state.guyY + 120;
+                // 跟隨 LiyuChillGuy 的屁股 (動態計算吉祥物實際寬高以支援響應式)
+                const guyEl = document.getElementById("liyu-chill-guy");
+                const guyWidth = guyEl ? guyEl.offsetWidth : 140;
+                const guyHeight = guyEl ? guyEl.offsetHeight : 140;
+                targetX = state.guyX + (guyWidth / 2);
+                targetY = state.guyY + (guyHeight * 0.85);
             } else {
                 // 跟隨隊伍前一隻
                 targetX = pikmins[idx - 1].x;
@@ -1144,11 +1296,13 @@ function updateLoop() {
                 p.element.classList.remove("walking");
             }
             
-            // 邊界防禦與反彈 (考慮皮克敏寬高 170px)
+            // 邊界防禦與反彈 (動態計算皮克敏實體寬高以支援響應式)
+            const pWidth = p.element.offsetWidth || 170;
+            const pHeight = p.element.offsetHeight || 170;
             if (p.x < 10) { p.x = 10; p.vx *= -1; }
-            if (p.x > stageWidth - 170) { p.x = stageWidth - 170; p.vx *= -1; }
+            if (p.x > stageWidth - pWidth) { p.x = stageWidth - pWidth; p.vx *= -1; }
             if (p.y < 90) { p.y = 90; p.vy *= -1; }
-            if (p.y > stageHeight - 170) { p.y = stageHeight - 170; p.vy *= -1; }
+            if (p.y > stageHeight - pHeight) { p.y = stageHeight - pHeight; p.vy *= -1; }
             
             // 檢查危險區域反應
             checkHazards(p, waterRect, fireRect);
