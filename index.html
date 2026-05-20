@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雙溪雲教授社團之皮克敏社員牆</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 進入遊戲的遮罩 (解決瀏覽器音訊政策) -->
+    <div id="start-overlay" class="overlay">
+        <div class="start-card glass-panel">
+            <div class="logo-container">
+                <i class="fa-solid fa-seedling logo-icon"></i>
+            </div>
+            <h1>雙溪雲教授社團之皮克敏社員牆</h1>
+            <p>歡迎來到神秘的雙溪雲教授花園！這裡居住著幾位特別的社員。</p>
+            <p class="subtitle">您可以拔起他們、投擲他們、指揮他們搬運寶物，一起探險吧。</p>
+            <button id="btn-enter" class="btn-glow">
+                <i class="fa-solid fa-play"></i> 進入雙溪雲教授花園
+            </button>
+        </div>
+    </div>
+
+    <!-- 遊戲舞台容器 -->
+    <div id="game-stage">
+        <!-- 頂部資訊與控制欄 -->
+        <header class="game-header glass-panel">
+            <div class="header-title">
+                <h1><i class="fa-solid fa-cloud text-cloud-accent"></i> 雙溪雲教授社團之皮克敏社員牆</h1>
+            </div>
+            
+            <div class="game-stats">
+                <div class="stat-item" title="當前總得分">
+                    <i class="fa-solid fa-trophy text-gold"></i>
+                    <span id="score-val">0</span>
+                </div>
+                <div class="stat-item" title="已拔出的皮克敏數量">
+                    <i class="fa-solid fa-users text-green"></i>
+                    <span id="pikmin-count-val">0 / 17</span>
+                </div>
+            </div>
+
+            <div class="game-controls">
+                <button id="btn-pluck-all" class="control-btn" title="一鍵拔出所有成員">
+                    <i class="fa-solid fa-hand-fist"></i> 一鍵拔起
+                </button>
+                <button id="btn-spawn-treasure" class="control-btn" title="產生隨機寶物">
+                    <i class="fa-solid fa-gem text-gold"></i> 召喚寶物
+                </button>
+                <button id="btn-day-night" class="control-btn" title="切換日夜模式">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- 互動環境區域 -->
+        <div id="stage-elements">
+            <!-- 洋蔥基地 (Pikmin Onion) -->
+            <div id="onion-base" class="onion-ship">
+                <div class="onion-glow"></div>
+                <div class="onion-body">
+                    <i class="fa-solid fa-rocket onion-icon"></i>
+                    <div class="onion-beam"></div>
+                </div>
+                <span class="onion-label">洋蔥基地</span>
+            </div>
+
+            <!-- 水池區域 (Blue Pikmin path) -->
+            <div id="water-pool" class="hazard-zone water">
+                <div class="zone-label"><i class="fa-solid fa-water"></i> 水之池</div>
+                <div class="water-ripple"></div>
+            </div>
+
+            <!-- 火堆區域 (Red Pikmin path) -->
+            <div id="fire-pit" class="hazard-zone fire">
+                <div class="zone-label"><i class="fa-solid fa-fire-flame-curved"></i> 火之域</div>
+                <div class="fire-sparks"></div>
+            </div>
+        </div>
+
+        <!-- 浮動提示或操作引導 -->
+        <div id="instruction-hint" class="glass-panel">
+            <span class="hint-text"><i class="fa-solid fa-info-circle"></i> 提示：點擊地上的綠色嫩芽來拔出皮克敏社員！</span>
+        </div>
+
+        <!-- 吉祥物 LiyuChillGuy -->
+        <div id="liyu-chill-guy" class="draggable-guy" title="我是 LiyuChillGuy！拖曳我可以移動，點擊我可以吹哨召集皮克敏！">
+            <img src="image/LiyuChillGuy.svg" alt="LiyuChillGuy" draggable="false">
+            <div class="whistle-glow"></div>
+        </div>
+
+        <!-- 音樂控制面板 (左下角，避開吉祥物) -->
+        <div id="music-player" class="glass-panel">
+            <button id="btn-music-toggle" class="music-btn" title="播放/暫停背景音樂">
+                <i class="fa-solid fa-volume-xmark"></i>
+            </button>
+            <div class="music-info">
+                <div class="music-title">背景音樂</div>
+                <div class="music-wave">
+                    <span></span><span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5" title="音量調節">
+        </div>
+
+        <!-- 頁尾宣告 -->
+        <footer class="game-footer">
+            <p>Copyright &copy; Liyuchiutiger Gongminshen</p>
+        </footer>
+    </div>
+
+    <!-- 詳細成員資料彈窗 (Glassmorphism Detail Modal) -->
+    <div id="member-modal" class="modal-overlay">
+        <div class="member-card glass-panel">
+            <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            <div class="card-layout">
+                <div class="card-avatar-container">
+                    <img id="modal-img" src="" alt="成員照片">
+                    <div id="modal-type-badge" class="type-badge">紅色</div>
+                </div>
+                <div class="card-info">
+                    <h2 id="modal-name">成員姓名</h2>
+                    <p id="modal-role" class="member-role">組別 / 職稱</p>
+                    
+                    <div class="pikmin-attributes">
+                        <h3>皮克敏屬性</h3>
+                        <div class="attr-row">
+                            <span class="attr-label">屬性能力:</span>
+                            <span id="modal-ability" class="attr-value">不怕火焰，戰鬥力強</span>
+                        </div>
+                        <div class="attr-stats">
+                            <div class="stat-bar-group">
+                                <label>搬運力量 (<span id="stat-strength-val">1</span>)</label>
+                                <div class="stat-bar"><div id="stat-strength" class="bar-fill" style="width: 20%;"></div></div>
+                            </div>
+                            <div class="stat-bar-group">
+                                <label>移動速度</label>
+                                <div class="stat-bar"><div id="stat-speed" class="bar-fill" style="width: 50%;"></div></div>
+                            </div>
+                            <div class="stat-bar-group">
+                                <label>水火抗性</label>
+                                <div class="stat-bar"><div id="stat-resist" class="bar-fill" style="width: 80%;"></div></div>
+                            </div>
+                        </div>
+                        <p class="flavor-text" id="modal-flavor">「雖然是個皮克敏，但寫 code 時非常專注！」</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 背景音樂 -->
+    <audio id="bg-music" src="music/background.mp3" loop></audio>
+
+    <script src="app.js"></script>
+</body>
+</html>
